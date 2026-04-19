@@ -10,8 +10,14 @@ public class AppDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // Se define la cadena de conexión apuntando a Docker local
-        optionsBuilder.UseNpgsql("Host=localhost;Database=estadio_db;Username=postgres;Password=mi_super_password");
+        // Se cargan las variables desde el archivo .env
+        DotNetEnv.Env.Load();
+        string host = System.Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+        string dbName = System.Environment.GetEnvironmentVariable("DB_NAME") ?? "estadio_db";
+        string user = System.Environment.GetEnvironmentVariable("DB_USER") ?? "postgres";
+        string pass = System.Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "";
+        
+        optionsBuilder.UseNpgsql($"Host={host};Database={dbName};Username={user};Password={pass}");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
