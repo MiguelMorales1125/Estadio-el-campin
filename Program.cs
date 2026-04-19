@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using StadiumSystem.Controllers;
 using StadiumSystem.Domain.Entities;
@@ -10,13 +11,6 @@ namespace StadiumSystem;
 
 public class Program
 {
-    // Propiedades de Estado del Estadio
-    private static string stadiumMode = "APAGADO";
-    private static string teamLocal = "Millonarios";
-    private static string teamAway = "Santa Fe";
-    private static int scoreLocal = 0;
-    private static int scoreAway = 0;
-
     public static void Main(string[] args)
     {
         Console.Title = "Gemelo Digital - Estadio El Campín";
@@ -52,7 +46,6 @@ public class Program
 
         Console.Clear();
         Console.WriteLine("[ Ingresar ]");
-        // El texto de ESC ahora también está nativo en ConsoleHelper para los sub-menús, aquí lo ponemos manual por leer input
         Console.WriteLine("[ESC] para regresar o salir.\n");
         Console.Write("Usuario: ");
         
@@ -87,19 +80,41 @@ public class Program
                 ConsoleHelper.ShowSuccess($"\n\nError BD: {ex.Message}");
             }
         }
-        
         return true;
     }
 
     private static bool DoMainMenuFlow(AppDbContext dbContext, AuthController auth, ref User? user)
     {
-        var options = new List<string>
+        // 1. CARGAMOS EL ESTADO DIRECTAMENTE DE LA BASE DE DATOS
+        var stState = dbContext.StadiumStates.FirstOrDefault(s => s.Id == 1);
+        if (stState == null) 
         {
-            "Cambiar modo actual",
-            "Configurar equipos",
-            "Registrar Gol",
-            "Reiniciar Marcador"
-        };
+            stState = new StadiumState { Id = 1, Mode = "APAGADO" };
+            dbContext.StadiumStates.Add(stState);
+            dbContext.SaveChanges();
+        }
+        string stadiumMode = stState.Mode;
+
+        var activeMatch = dbContext.Matches.FirstOrDefault(m => m.IsActive);
+        bool matchExists = activeMatch != null;
+        string teamLocal = matchExists ? activeMatch!.TeamLocal : "NINGUNO";
+        string teamAway  = matchExists ? activeMatch!.TeamAway : "NINGUNO";
+        int scoreLocal   = matchExists ? activeMatch!.ScoreLocal : 0;
+        int scoreAway    = matchExists ? activeMatch!.ScoreAway : 0;
+
+        // 2. CONSTRUIMOS EL MENÚ ACORDE A SI HAY PARTIDO EN VIVO
+        var options = new List<string> { "Cambiar modo actual" };
+        
+        if (!matchExists) 
+        {
+            options.Add("Iniciar Nuevo Partido");
+        } 
+        else 
+        {
+            options.Add("Registrar Gol");
+            options.Add("Reiniciar Marcador");
+            options.Add("Finalizar Partido");
+        }
 
         if (user!.Role == "ADMIN" || user.Role == "ADMINISTRADOR")
             options.Add("[ADMIN] Registrar Nuevo Operario");
@@ -108,21 +123,22 @@ public class Program
         options.Add("Salir");
 
         string title = $"=== MENÚ PRINCIPAL ({user.Role}: {user.Username}) ===";
-        string sub = $"ESTADO: {stadiumMode}   |   MARCADOR: {teamLocal} {scoreLocal} - {scoreAway} {teamAway}";
+        string sub = $"ESTADO: {stadiumMode}   |   PARTIDO EN VIVO: {(matchExists ? "SÍ" : "NO")}   |   MARCADOR: {teamLocal} {scoreLocal} - {scoreAway} {teamAway}";
 
         int sel = ConsoleHelper.ShowInteractiveMenu(title, sub, options.ToArray());
         Console.Clear();
 
-        if (sel == -1) return true; // Clic a ESC en lugar de Enter
+        if (sel == -1) return true; // Clic a ESC resetea el loop principal
 
         string selectedOption = options[sel];
         string commandExecuted = string.Empty;
 
-        // --- Ruteo Limpio y Desacoplado ---
-        if (selectedOption == "Cambiar modo actual") commandExecuted = HandleModeChange();
-        else if (selectedOption == "Configurar equipos") commandExecuted = HandleTeamConfig();
-        else if (selectedOption == "Registrar Gol") commandExecuted = HandleGoal();
-        else if (selectedOption == "Reiniciar Marcador") commandExecuted = HandleResetMarker();
+        // 3. RUTEO DE COMANDOS EFICIENTE
+        if (selectedOption == "Cambiar modo actual") commandExecuted = HandleModeChange(dbContext, stState);
+        else if (selectedOption == "Iniciar Nuevo Partido") commandExecuted = HandleNewMatch(dbContext);
+        else if (selectedOption == "Registrar Gol") commandExecuted = HandleGoal(dbContext, activeMatch!);
+        else if (selectedOption == "Reiniciar Marcador") commandExecuted = HandleResetMarker(dbContext, activeMatch!);
+        else if (selectedOption == "Finalizar Partido") commandExecuted = HandleFinishMatch(dbContext, activeMatch!);
         else if (selectedOption == "[ADMIN] Registrar Nuevo Operario") commandExecuted = HandleRegisterUser(auth, user);
         else if (selectedOption == "Cerrar Sesión") 
         {
@@ -133,10 +149,10 @@ public class Program
         else if (selectedOption == "Salir")
         {
             ConsoleHelper.ShowSuccess("Saliendo...");
-            return false; // Apaga el bucle Global isRunning
+            return false;
         }
 
-        // --- Auditoría ---
+        // 4. AUDITAR LA ACCIÓN EN BASE DE DATOS MIENTRAS REGRESAMOS
         if (!string.IsNullOrEmpty(commandExecuted) && user != null)
         {
             try
@@ -148,76 +164,98 @@ public class Program
             {
                 Console.WriteLine($"[Offline Log]: {commandExecuted}");
             }
-            // Retraso para que el usuario lea el resultado del Console.WriteLine() antes de volver al menú
+            // Retraso para ver el Print success sin presionar Enter (Requerimiento)
             ConsoleHelper.ShowSuccess("");
         }
 
         return true;
     }
 
-    private static string HandleModeChange()
+    private static string HandleModeChange(AppDbContext db, StadiumState state)
     {
         var modeOptions = new[] { "PARTIDO", "MANTENIMIENTO", "EMERGENCIA" };
         int idx = ConsoleHelper.ShowInteractiveMenu("=== SELECCIONAR MODO ===", "", modeOptions);
         Console.Clear();
         if (idx == -1) return "";
 
-        stadiumMode = modeOptions[idx];
-        Console.WriteLine($"\n>> Modo {stadiumMode} activado y dispositivos actualizados.");
-        return $"MODO_{stadiumMode}";
+        state.Mode = modeOptions[idx];
+        db.SaveChanges(); // Guardamos el cambio en PostgreSQL permanentemente
+
+        Console.WriteLine($"\n>> Modo {state.Mode} guardado en BD y dispositivos activados.");
+        return $"MODO_{state.Mode}";
     }
 
-    private static string HandleTeamConfig()
+    private static string HandleNewMatch(AppDbContext db)
     {
-        var opts = new[] { $"Local     (Actual: {teamLocal})", $"Visitante (Actual: {teamAway})" };
-        int idx = ConsoleHelper.ShowInteractiveMenu("=== CONFIGURAR EQUIPO ===", "", opts);
-        Console.Clear();
-        if (idx == -1) return "";
+        Console.WriteLine("=== CONFIGURAR NUEVO PARTIDO ===");
+        Console.WriteLine("[ESC] para cancelar.\n");
+        Console.Write("Nombre del Equipo Local: ");
+        string? nLocal = ConsoleHelper.ReadInputWithEsc();
+        if (string.IsNullOrWhiteSpace(nLocal)) return "";
 
-        Console.Write($"\nNuevo nombre del {(idx == 0 ? "Local" : "Visitante")}: ");
-        string? nName = ConsoleHelper.ReadInputWithEsc();
-        if (string.IsNullOrWhiteSpace(nName)) return "";
+        Console.Write("\nNombre del Equipo Visitante: ");
+        string? nAway = ConsoleHelper.ReadInputWithEsc();
+        if (string.IsNullOrWhiteSpace(nAway)) return "";
 
-        if (idx == 0) 
-        { 
-            teamLocal = nName; 
-            Console.WriteLine($"\n>> Local configurado a: {teamLocal}");
-            return $"CONF_LOCAL_{teamLocal}"; 
-        }
+        var match = new MatchSession
+        {
+            TeamLocal = nLocal,
+            TeamAway = nAway,
+            ScoreLocal = 0,
+            ScoreAway = 0,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
         
-        teamAway = nName; 
-        Console.WriteLine($"\n>> Visitante configurado a: {teamAway}");
-        return $"CONF_AWAY_{teamAway}";
+        db.Matches.Add(match);
+        db.SaveChanges(); // Persistimos en PostgreSQL
+
+        Console.WriteLine($"\n>> Partido Oficial Iniciado: {nLocal} vs {nAway}");
+        return $"INICIO_PARTIDO_{nLocal}_VS_{nAway}";
     }
 
-    private static string HandleGoal()
+    private static string HandleGoal(AppDbContext db, MatchSession match)
     {
-        var goals = new[] { teamLocal, teamAway };
+        var goals = new[] { match.TeamLocal, match.TeamAway };
         int idx = ConsoleHelper.ShowInteractiveMenu("=== ANOTAR GOL ===", "", goals);
         Console.Clear();
         
         if (idx == 0) 
         { 
-            scoreLocal++; 
-            Console.WriteLine($"\n>> ¡GOL de {teamLocal}!"); 
+            match.ScoreLocal++; 
+            db.SaveChanges();
+            Console.WriteLine($"\n>> ¡GOL de {match.TeamLocal}!"); 
             return "GOL_LOCAL"; 
         }
         else if (idx == 1) 
         { 
-            scoreAway++; 
-            Console.WriteLine($"\n>> ¡GOL de {teamAway}!"); 
+            match.ScoreAway++; 
+            db.SaveChanges();
+            Console.WriteLine($"\n>> ¡GOL de {match.TeamAway}!"); 
             return "GOL_VISITANTE"; 
         }
 
         return "";
     }
 
-    private static string HandleResetMarker()
+    private static string HandleResetMarker(AppDbContext db, MatchSession match)
     {
-        scoreLocal = 0;
-        scoreAway = 0;
-        Console.WriteLine("\n>> Marcador reiniciado a 0 - 0");
+        match.ScoreLocal = 0;
+        match.ScoreAway = 0;
+        db.SaveChanges();
+        Console.WriteLine("\n>> Marcador reiniciado a 0 - 0 en la BD.");
         return "REINICIAR_MARCADOR";
+    }
+
+    private static string HandleFinishMatch(AppDbContext db, MatchSession match)
+    {
+        match.IsActive = false;
+        match.FinishedAt = DateTime.UtcNow;
+        db.SaveChanges(); // Persistimos cierre histórico
+
+        Console.WriteLine($"\n>> Partido Finalizado históricamente.");
+        Console.WriteLine($">> Resultado Final: {match.TeamLocal} {match.ScoreLocal} - {match.ScoreAway} {match.TeamAway}");
+        return "FINALIZAR_PARTIDO";
     }
 
     private static string HandleRegisterUser(AuthController auth, User currentUser)

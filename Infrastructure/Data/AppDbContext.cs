@@ -7,6 +7,8 @@ public class AppDbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<CommandAuditLog> AuditLogs { get; set; }
+    public DbSet<StadiumState> StadiumStates { get; set; }
+    public DbSet<MatchSession> Matches { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
