@@ -16,7 +16,6 @@ public class StadiumController : IEventHandler
     private SoundController _soundController;
     private ScoreController _scoreController;
     private LightController _lightController;
-    private AdminSession _adminSession;
     private EventBus _eventBus;
 
     public StadiumController()
@@ -25,8 +24,7 @@ public class StadiumController : IEventHandler
         _soundController = new SoundController();
         _scoreController = new ScoreController();
         _lightController = new LightController();
-        _adminSession = new AdminSession();
-        _eventBus = new EventBus();
+        _eventBus = EventBus.GetInstance();
     }
 
     /// <summary>
