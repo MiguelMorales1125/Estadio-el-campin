@@ -6,7 +6,7 @@ namespace StadiumSystem.Events;
 /// </summary>
 public class EventBus
 {
-    // GRASP - Information Expert: conoce y gestiona los suscriptores.
+    // GRASP - Information Expert: conoce y gestiona los suscriptores del sistema.
     private readonly Dictionary<string, List<Action<IEvent>>> _subscribers;
     private static EventBus? _instance;
 

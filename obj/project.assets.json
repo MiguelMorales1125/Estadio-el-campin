@@ -7078,19 +7078,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\VICTUS\\.nuget\\packages\\": {}
+    "C:\\Users\\Camilo\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\VICTUS\\OneDrive\\Documentos\\El-campin\\Estadio-el-campin\\StadiumSystem.csproj",
+      "projectUniqueName": "C:\\Users\\Camilo\\OneDrive\\Desktop\\Estadio-el-campin\\StadiumSystem.csproj",
       "projectName": "StadiumSystem",
-      "projectPath": "C:\\Users\\VICTUS\\OneDrive\\Documentos\\El-campin\\Estadio-el-campin\\StadiumSystem.csproj",
-      "packagesPath": "C:\\Users\\VICTUS\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\VICTUS\\OneDrive\\Documentos\\El-campin\\Estadio-el-campin\\obj\\",
+      "projectPath": "C:\\Users\\Camilo\\OneDrive\\Desktop\\Estadio-el-campin\\StadiumSystem.csproj",
+      "packagesPath": "C:\\Users\\Camilo\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Camilo\\OneDrive\\Desktop\\Estadio-el-campin\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\VICTUS\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\Camilo\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
@@ -7181,7 +7181,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.CSharp": "(,4.7.32767]",
           "Microsoft.VisualBasic": "(,10.4.32767]",
