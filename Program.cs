@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using StadiumSystem.Controllers;
 using StadiumSystem.Domain.Entities;
+using StadiumSystem.Infrastructure;
 using StadiumSystem.Infrastructure.Data;
 using StadiumSystem.Infrastructure.Security;
 using StadiumSystem.UI;
@@ -21,6 +23,10 @@ public class Program
 
         try { authController.SeedAdminIfNotExists(); } catch { }
 
+        var arduino = ArduinoConnection.GetInstance();
+        arduino.MessageReceived += OnArduinoMessage;
+        arduino.StartListening();
+
         bool isRunning = true;
         User? currentUserInfo = null;
 
@@ -35,6 +41,40 @@ public class Program
                 isRunning = DoMainMenuFlow(dbContext, authController, ref currentUserInfo);
             }
         }
+
+        try { arduino.Dispose(); } catch { }
+    }
+
+    private static string? _goalFlashText;
+    private static DateTime _goalFlashUntil = DateTime.MinValue;
+
+    private static string? CurrentFlash()
+    {
+        if (DateTime.UtcNow < _goalFlashUntil) return _goalFlashText;
+        return null;
+    }
+
+    private static void OnArduinoMessage(string message)
+    {
+        if (!string.Equals(message, "MOV", StringComparison.OrdinalIgnoreCase)) return;
+
+        try
+        {
+            using var db = new AppDbContext();
+            var match = db.Matches.FirstOrDefault(m => m.IsActive);
+            if (match == null) return;
+
+            string team = (System.Environment.GetEnvironmentVariable("ARDUINO_GOAL_TEAM") ?? "LOCAL").ToUpper();
+            string teamName;
+            if (team == "AWAY") { match.ScoreAway++; teamName = match.TeamAway; }
+            else { match.ScoreLocal++; teamName = match.TeamLocal; }
+
+            db.SaveChanges();
+
+            _goalFlashText = $">> ¡GOL de {teamName}! (Arduino)";
+            _goalFlashUntil = DateTime.UtcNow.AddSeconds(2.5);
+        }
+        catch { }
     }
 
     private static bool DoLoginFlow(AuthController auth, out User? user)
@@ -96,11 +136,11 @@ public class Program
         string stadiumMode = stState.Mode;
 
         var activeMatch = dbContext.Matches.FirstOrDefault(m => m.IsActive);
+        if (activeMatch != null)
+        {
+            try { dbContext.Entry(activeMatch).Reload(); } catch { }
+        }
         bool matchExists = activeMatch != null;
-        string teamLocal = matchExists ? activeMatch!.TeamLocal : "NINGUNO";
-        string teamAway  = matchExists ? activeMatch!.TeamAway : "NINGUNO";
-        int scoreLocal   = matchExists ? activeMatch!.ScoreLocal : 0;
-        int scoreAway    = matchExists ? activeMatch!.ScoreAway : 0;
 
         // 2. CONSTRUIMOS EL MENÚ ACORDE A SI HAY PARTIDO EN VIVO
         var options = new List<string> { "Cambiar modo actual" };
@@ -123,9 +163,21 @@ public class Program
         options.Add("Salir");
 
         string title = $"=== MENÚ PRINCIPAL ({user.Role}: {user.Username}) ===";
-        string sub = $"ESTADO: {stadiumMode}   |   PARTIDO EN VIVO: {(matchExists ? "SÍ" : "NO")}   |   MARCADOR: {teamLocal} {scoreLocal} - {scoreAway} {teamAway}";
 
-        int sel = ConsoleHelper.ShowInteractiveMenu(title, sub, options.ToArray());
+        int sel;
+        if (matchExists)
+        {
+            sel = ConsoleHelper.ShowInteractiveMenu(
+                title,
+                () => BuildLiveSubtitle(stadiumMode),
+                options.ToArray(),
+                CurrentFlash);
+        }
+        else
+        {
+            string sub = $"ESTADO: {stadiumMode}   |   PARTIDO EN VIVO: NO   |   MARCADOR: NINGUNO 0 - 0 NINGUNO";
+            sel = ConsoleHelper.ShowInteractiveMenu(title, sub, options.ToArray());
+        }
         Console.Clear();
 
         if (sel == -1) return true; // Clic a ESC resetea el loop principal
@@ -169,6 +221,22 @@ public class Program
         }
 
         return true;
+    }
+
+    private static string BuildLiveSubtitle(string stadiumMode)
+    {
+        try
+        {
+            using var db = new AppDbContext();
+            var m = db.Matches.AsNoTracking().FirstOrDefault(x => x.IsActive);
+            if (m == null)
+                return $"ESTADO: {stadiumMode}   |   PARTIDO EN VIVO: NO   |   MARCADOR: NINGUNO 0 - 0 NINGUNO";
+            return $"ESTADO: {stadiumMode}   |   PARTIDO EN VIVO: SÍ   |   MARCADOR: {m.TeamLocal} {m.ScoreLocal} - {m.ScoreAway} {m.TeamAway}";
+        }
+        catch
+        {
+            return $"ESTADO: {stadiumMode}   |   PARTIDO EN VIVO: ?";
+        }
     }
 
     private static string HandleModeChange(AppDbContext db, StadiumState state)

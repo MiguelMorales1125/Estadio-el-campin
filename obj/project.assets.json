@@ -5502,19 +5502,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\sierr\\.nuget\\packages\\": {}
+    "C:\\Users\\VICTUS\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\sierr\\OneDrive\\Documentos\\Programming\\TecAvanzadas\\Estadio-el-campin\\StadiumSystem.csproj",
+      "projectUniqueName": "C:\\Users\\VICTUS\\OneDrive\\Documentos\\El-campin\\Estadio-el-campin\\StadiumSystem.csproj",
       "projectName": "StadiumSystem",
-      "projectPath": "C:\\Users\\sierr\\OneDrive\\Documentos\\Programming\\TecAvanzadas\\Estadio-el-campin\\StadiumSystem.csproj",
-      "packagesPath": "C:\\Users\\sierr\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\sierr\\OneDrive\\Documentos\\Programming\\TecAvanzadas\\Estadio-el-campin\\obj\\",
+      "projectPath": "C:\\Users\\VICTUS\\OneDrive\\Documentos\\El-campin\\Estadio-el-campin\\StadiumSystem.csproj",
+      "packagesPath": "C:\\Users\\VICTUS\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\VICTUS\\OneDrive\\Documentos\\El-campin\\Estadio-el-campin\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\sierr\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\VICTUS\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
