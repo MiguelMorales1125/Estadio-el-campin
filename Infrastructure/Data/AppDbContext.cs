@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using StadiumSystem.Domain.Entities;
+using System.IO;
 
 namespace StadiumSystem.Infrastructure.Data;
 
@@ -12,8 +13,14 @@ public class AppDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // Se cargan las variables desde el archivo .env
-        DotNetEnv.Env.Load();
+        // Carga .env desde la carpeta del ejecutable (build/publish)
+        // y luego intenta el directorio de trabajo actual como fallback.
+        string envFromExeDir = Path.Combine(AppContext.BaseDirectory, ".env");
+        if (File.Exists(envFromExeDir))
+            DotNetEnv.Env.Load(envFromExeDir);
+        else
+            DotNetEnv.Env.Load();
+
         string host = System.Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
         string dbName = System.Environment.GetEnvironmentVariable("DB_NAME") ?? "estadio_db";
         string user = System.Environment.GetEnvironmentVariable("DB_USER") ?? "postgres";
