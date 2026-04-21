@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "targets": {
     "net10.0": {
       "BCrypt.Net-Next/4.0.3": {
@@ -5502,28 +5502,31 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\sierr\\.nuget\\packages\\": {}
+    "C:\\Users\\carlo\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\sierr\\OneDrive\\Documentos\\Programming\\TecAvanzadas\\Estadio-el-campin\\StadiumSystem.csproj",
+      "projectUniqueName": "C:\\Users\\carlo\\source\\repos\\Estadio-el-campin\\StadiumSystem.csproj",
       "projectName": "StadiumSystem",
-      "projectPath": "C:\\Users\\sierr\\OneDrive\\Documentos\\Programming\\TecAvanzadas\\Estadio-el-campin\\StadiumSystem.csproj",
-      "packagesPath": "C:\\Users\\sierr\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\sierr\\OneDrive\\Documentos\\Programming\\TecAvanzadas\\Estadio-el-campin\\obj\\",
+      "projectPath": "C:\\Users\\carlo\\source\\repos\\Estadio-el-campin\\StadiumSystem.csproj",
+      "packagesPath": "C:\\Users\\carlo\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\carlo\\source\\repos\\Estadio-el-campin\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\sierr\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\carlo\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net10.0": {
+          "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {}
         }
@@ -5538,10 +5541,11 @@
         "auditLevel": "low",
         "auditMode": "all"
       },
-      "SdkAnalysisLevel": "10.0.200"
+      "SdkAnalysisLevel": "10.0.300"
     },
     "frameworks": {
       "net10.0": {
+        "framework": "net10.0",
         "targetAlias": "net10.0",
         "dependencies": {
           "BCrypt.Net-Next": {
@@ -5585,7 +5589,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300-preview.0.26177.108/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.CSharp": "(,4.7.32767]",
           "Microsoft.VisualBasic": "(,10.4.32767]",
@@ -5868,7 +5872,7 @@
       "code": "NU1903",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "El paquete \"System.Security.Cryptography.Xml\" 9.0.0 tiene una vulnerabilidad de gravedad alta conocida, https://github.com/advisories/GHSA-37gx-xxp4-5rgx",
+      "message": "Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-37gx-xxp4-5rgx",
       "libraryId": "System.Security.Cryptography.Xml",
       "targetGraphs": [
         "net10.0"
@@ -5878,7 +5882,7 @@
       "code": "NU1903",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "El paquete \"System.Security.Cryptography.Xml\" 9.0.0 tiene una vulnerabilidad de gravedad alta conocida, https://github.com/advisories/GHSA-w3x6-4m5h-cxqf",
+      "message": "Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-w3x6-4m5h-cxqf",
       "libraryId": "System.Security.Cryptography.Xml",
       "targetGraphs": [
         "net10.0"
