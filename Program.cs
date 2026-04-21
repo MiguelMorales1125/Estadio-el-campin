@@ -222,7 +222,7 @@ public class Program
         else if (selectedOption == "Iniciar Nuevo Partido") commandExecuted = HandleNewMatch(dbContext);
         else if (selectedOption == "Registrar Gol") commandExecuted = HandleGoal(dbContext, activeMatch!);
         else if (selectedOption == "Reiniciar Marcador") commandExecuted = HandleResetMarker(dbContext, activeMatch!);
-        else if (selectedOption == "Finalizar Partido") commandExecuted = HandleFinishMatch(dbContext, activeMatch!);
+        else if (selectedOption == "Finalizar Partido") commandExecuted = HandleFinishMatch(dbContext);
         else if (selectedOption == "[ADMIN] Registrar Nuevo Operario") commandExecuted = HandleRegisterUser(auth, user);
         else if (selectedOption == "Cerrar Sesión") 
         {
@@ -347,14 +347,23 @@ public class Program
         return "REINICIAR_MARCADOR";
     }
 
-    private static string HandleFinishMatch(AppDbContext db, MatchSession match)
+    private static string HandleFinishMatch(AppDbContext db)
     {
-        match.IsActive = false;
-        match.FinishedAt = DateTime.UtcNow;
+        var liveMatch = db.Matches.AsNoTracking().FirstOrDefault(m => m.IsActive);
+        if (liveMatch == null) return "";
+
+        var trackedMatch = db.Matches.FirstOrDefault(m => m.Id == liveMatch.Id);
+        if (trackedMatch == null) return "";
+
+        trackedMatch.IsActive = false;
+        trackedMatch.FinishedAt = DateTime.UtcNow;
         db.SaveChanges(); // Persistimos cierre histórico
 
+        var finalSnapshot = db.Matches.AsNoTracking().FirstOrDefault(m => m.Id == trackedMatch.Id);
+        var scoreSource = finalSnapshot ?? trackedMatch;
+
         Console.WriteLine($"\n>> Partido Finalizado históricamente.");
-        Console.WriteLine($">> Resultado Final: {match.TeamLocal} {match.ScoreLocal} - {match.ScoreAway} {match.TeamAway}");
+        Console.WriteLine($">> Resultado Final: {scoreSource.TeamLocal} {scoreSource.ScoreLocal} - {scoreSource.ScoreAway} {scoreSource.TeamAway}");
         return "FINALIZAR_PARTIDO";
     }
 
