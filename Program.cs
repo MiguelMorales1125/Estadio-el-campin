@@ -47,6 +47,9 @@ public class Program
 
     private static string? _goalFlashText;
     private static DateTime _goalFlashUntil = DateTime.MinValue;
+    private static readonly object _arduinoGoalLock = new();
+    private static DateTime _lastMovSeenUtc = DateTime.MinValue;
+    private static bool _goalAlreadyCountedForThisEvent = false;
 
     private static string? CurrentFlash()
     {
@@ -60,6 +63,35 @@ public class Program
 
         try
         {
+            // Ventana de silencio: el sensor debe estar en silencio este tiempo
+            // antes de aceptar un nuevo gol. Mientras llegan MOV (aun cada 2s
+            // por re-trigger del PIR), la ventana se reinicia y se ignoran.
+            int silenceMs = int.TryParse(
+                System.Environment.GetEnvironmentVariable("ARDUINO_GOAL_COOLDOWN_MS"),
+                out var parsedSilenceMs) ? parsedSilenceMs : 6000;
+
+            bool shouldCount;
+            lock (_arduinoGoalLock)
+            {
+                var now = DateTime.UtcNow;
+
+                // Si pasó suficiente tiempo sin mensajes MOV, se re-arma el
+                // detector para aceptar el siguiente evento.
+                if ((now - _lastMovSeenUtc).TotalMilliseconds > silenceMs)
+                {
+                    _goalAlreadyCountedForThisEvent = false;
+                }
+
+                _lastMovSeenUtc = now;
+
+                if (_goalAlreadyCountedForThisEvent) return;
+
+                _goalAlreadyCountedForThisEvent = true;
+                shouldCount = true;
+            }
+
+            if (!shouldCount) return;
+
             using var db = new AppDbContext();
             var match = db.Matches.FirstOrDefault(m => m.IsActive);
             if (match == null) return;
