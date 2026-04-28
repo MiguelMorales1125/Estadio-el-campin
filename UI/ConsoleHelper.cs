@@ -2,11 +2,6 @@ using System;
 
 namespace StadiumSystem.UI;
 
-/// <summary>
-/// GRASP: Pure Fabrication.
-/// Se extrajo toda la lógica repetitiva y pesada de la consola a esta clase helper
-/// para mantener Program.cs completamente limpio y enfocado a flujo de negocio.
-/// </summary>
 public static class ConsoleHelper
 {
     public static void ShowSuccess(string message = "")
@@ -18,9 +13,6 @@ public static class ConsoleHelper
         System.Threading.Thread.Sleep(1200);
     }
 
-    /// <summary>
-    /// Dibuja un menú dinámico y maneja la lógica de las flechas nativas y cancelación con Escape.
-    /// </summary>
     public static int ShowInteractiveMenu(string title, string subtitle, string[] options)
     {
         int selectedIndex = 0;
@@ -83,10 +75,6 @@ public static class ConsoleHelper
         return selectedIndex;
     }
 
-    /// <summary>
-    /// Variante con subtítulo/flash dinámicos: redibuja periódicamente sin bloquear en ReadKey,
-    /// permitiendo reflejar cambios externos (ej. goles enviados por Arduino) en tiempo real.
-    /// </summary>
     public static int ShowInteractiveMenu(
         string title,
         Func<string> subtitleProvider,
@@ -195,7 +183,7 @@ public static class ConsoleHelper
         do
         {
             info = Console.ReadKey(true);
-            if (info.Key == ConsoleKey.Escape) return null; // Abort
+            if (info.Key == ConsoleKey.Escape) return null; 
             
             if (info.Key == ConsoleKey.Backspace && input.Length > 0)
             {
@@ -219,7 +207,7 @@ public static class ConsoleHelper
         do
         {
             info = Console.ReadKey(true);
-            if (info.Key == ConsoleKey.Escape) return null; // Abort
+            if (info.Key == ConsoleKey.Escape) return null; 
             
             if (info.Key == ConsoleKey.Backspace && password.Length > 0)
             {
