@@ -5,11 +5,7 @@ using StadiumSystem.Infrastructure;
 
 namespace StadiumSystem.Controllers;
 
-/// <summary>
-/// GRASP - Controller (Facade Controller): punto de entrada principal para
-/// los casos de uso del estadio. Delega responsabilidades específicas a
-/// sub-controladores (High Cohesion + Low Coupling).
-/// </summary>
+
 public class StadiumController : IEventHandler
 {
     private Stadium _stadium;
@@ -27,21 +23,14 @@ public class StadiumController : IEventHandler
         _eventBus = EventBus.GetInstance();
     }
 
-    /// <summary>
-    /// Cambia el modo del estadio y delega al método de activación
-    /// correspondiente según el estado recibido.
-    /// </summary>
+
     public void SetMode(StadiumStates state) { }
 
-    /// <summary>Activa el modo partido: luces, música y marcador listos.</summary>
     public void ActivateMatchMode() { }
 
-    /// <summary>Activa el modo mantenimiento: luces reducidas, sin audio.</summary>
     public void ActivateMaintenanceMode() { }
 
-    /// <summary>Activa el modo emergencia: sirenas, luces de emergencia.</summary>
     public void ActivateEmergencyMode() { }
 
-    /// <inheritdoc/>
     public void Handle(IEvent @event) { }
 }

@@ -15,7 +15,6 @@ namespace StadiumSystem.Migrations
     [Migration("20260419205619_ApplyStadiumStateAndMatchDB")]
     partial class ApplyStadiumStateAndMatchDB
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

@@ -13,8 +13,7 @@ public class AppDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // Carga .env desde la carpeta del ejecutable (build/publish)
-        // y luego intenta el directorio de trabajo actual como fallback.
+
         string envFromExeDir = Path.Combine(AppContext.BaseDirectory, ".env");
         if (File.Exists(envFromExeDir))
             DotNetEnv.Env.Load(envFromExeDir);

@@ -2,10 +2,6 @@ using StadiumSystem.Enums;
 
 namespace StadiumSystem.Domain;
 
-/// <summary>
-/// GRASP - Information Expert: representa el estadio físico; conoce su
-/// estado actual, sus luces y su marcador. Actúa como raíz del modelo.
-/// </summary>
 public class Stadium
 {
     private StadiumStates _actualState;
@@ -23,5 +19,4 @@ public class Stadium
     public Scoreboard GetScoreboard() { return _scoreboard; }
     public StadiumStates GetState() { return _actualState; }
 
-    // Getters & setters adicionales según necesidad
 }

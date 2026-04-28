@@ -4,10 +4,7 @@ using StadiumSystem.Events;
 
 namespace StadiumSystem.Infrastructure;
 
-/// <summary>
-/// GRASP - Controller + Pure Fabrication: gestiona la comunicación serie con
-/// el Arduino. Singleton garantiza una única conexión activa en el sistema.
-/// </summary>
+
 public class ArduinoConnection : IDisposable
 {
     private readonly SerialPort _port;
@@ -17,7 +14,6 @@ public class ArduinoConnection : IDisposable
     private readonly object _bufferLock = new();
     private string _buffer = string.Empty;
 
-    /// <summary>Evento disparado cuando llega una línea completa del Arduino.</summary>
     public event Action<string>? MessageReceived;
 
     private ArduinoConnection()
@@ -38,14 +34,12 @@ public class ArduinoConnection : IDisposable
         };
     }
 
-    /// <summary>Singleton: retorna la única instancia de la conexión.</summary>
     public static ArduinoConnection GetInstance()
     {
         _instance ??= new ArduinoConnection();
         return _instance;
     }
 
-    /// <summary>Envía un comando serializado al Arduino vía puerto serie.</summary>
     public void SendCommand(ICommand command)
     {
         if (!_port.IsOpen) return;
@@ -53,7 +47,6 @@ public class ArduinoConnection : IDisposable
         catch { }
     }
 
-    /// <summary>Inicia la escucha de mensajes entrantes del Arduino.</summary>
     public bool StartListening()
     {
         if (_port.IsOpen) return true;
@@ -90,13 +83,11 @@ public class ArduinoConnection : IDisposable
         catch { }
     }
 
-    /// <summary>Procesa un mensaje de texto recibido y publica el IEvent correspondiente.</summary>
     public void ProcessIncomingMessage(string message)
     {
         MessageReceived?.Invoke(message);
     }
 
-    /// <summary>Procesa el inventario de dispositivos reportado por el Arduino.</summary>
     public void ProcessInventory(string inventory) { }
 
     public void Dispose()

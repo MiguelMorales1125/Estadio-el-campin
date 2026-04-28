@@ -5,15 +5,13 @@ using StadiumSystem.Infrastructure.Security;
 
 namespace StadiumSystem.Controllers;
 
-/// <summary>
-/// GRASP: Controlador de Alta Cohesión. Solo maneja lógica de usuarios (Registro/Login).
-/// </summary>
+<summary>
+</summary>
 public class AuthController
 {
     private readonly AppDbContext _dbContext;
     private readonly IPasswordHasher _passwordHasher;
 
-    // SOLID: Dependency Inversion
     public AuthController(AppDbContext dbContext, IPasswordHasher passwordHasher)
     {
         _dbContext = dbContext;

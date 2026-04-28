@@ -2,10 +2,9 @@ using StadiumSystem.Enums;
 
 namespace StadiumSystem.Audio;
 
-/// <summary>
-/// GRASP - Protected Variations: desacopla SoundController del dispositivo
-/// de audio concreto (p.ej. Buzzer, speaker externo, etc.).
-/// </summary>
+<summary>
+
+</summary>
 public interface IAudioDevice
 {
     void Play(SoundTracks track);

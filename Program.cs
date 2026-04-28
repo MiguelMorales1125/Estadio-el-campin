@@ -63,9 +63,6 @@ public class Program
 
         try
         {
-            // Ventana de silencio: el sensor debe estar en silencio este tiempo
-            // antes de aceptar un nuevo gol. Mientras llegan MOV (aun cada 2s
-            // por re-trigger del PIR), la ventana se reinicia y se ignoran.
             int silenceMs = int.TryParse(
                 System.Environment.GetEnvironmentVariable("ARDUINO_GOAL_COOLDOWN_MS"),
                 out var parsedSilenceMs) ? parsedSilenceMs : 6000;
@@ -75,8 +72,6 @@ public class Program
             {
                 var now = DateTime.UtcNow;
 
-                // Si pasó suficiente tiempo sin mensajes MOV, se re-arma el
-                // detector para aceptar el siguiente evento.
                 if ((now - _lastMovSeenUtc).TotalMilliseconds > silenceMs)
                 {
                     _goalAlreadyCountedForThisEvent = false;
@@ -157,7 +152,6 @@ public class Program
 
     private static bool DoMainMenuFlow(AppDbContext dbContext, AuthController auth, ref User? user)
     {
-        // 1. CARGAMOS EL ESTADO DIRECTAMENTE DE LA BASE DE DATOS
         var stState = dbContext.StadiumStates.FirstOrDefault(s => s.Id == 1);
         if (stState == null) 
         {
@@ -174,7 +168,6 @@ public class Program
         }
         bool matchExists = activeMatch != null;
 
-        // 2. CONSTRUIMOS EL MENÚ ACORDE A SI HAY PARTIDO EN VIVO
         var options = new List<string> { "Cambiar modo actual" };
         
         if (!matchExists) 
@@ -212,12 +205,11 @@ public class Program
         }
         Console.Clear();
 
-        if (sel == -1) return true; // Clic a ESC resetea el loop principal
+        if (sel == -1) return true;
 
         string selectedOption = options[sel];
         string commandExecuted = string.Empty;
 
-        // 3. RUTEO DE COMANDOS EFICIENTE
         if (selectedOption == "Cambiar modo actual") commandExecuted = HandleModeChange(dbContext, stState);
         else if (selectedOption == "Iniciar Nuevo Partido") commandExecuted = HandleNewMatch(dbContext);
         else if (selectedOption == "Registrar Gol") commandExecuted = HandleGoal(dbContext, activeMatch!);
@@ -248,7 +240,6 @@ public class Program
             {
                 Console.WriteLine($"[Offline Log]: {commandExecuted}");
             }
-            // Retraso para ver el Print success sin presionar Enter (Requerimiento)
             ConsoleHelper.ShowSuccess("");
         }
 
@@ -279,7 +270,7 @@ public class Program
         if (idx == -1) return "";
 
         state.Mode = modeOptions[idx];
-        db.SaveChanges(); // Guardamos el cambio en PostgreSQL permanentemente
+        db.SaveChanges();
 
         Console.WriteLine($"\n>> Modo {state.Mode} guardado en BD y dispositivos activados.");
         return $"MODO_{state.Mode}";
@@ -308,7 +299,7 @@ public class Program
         };
         
         db.Matches.Add(match);
-        db.SaveChanges(); // Persistimos en PostgreSQL
+        db.SaveChanges();
 
         Console.WriteLine($"\n>> Partido Oficial Iniciado: {nLocal} vs {nAway}");
         return $"INICIO_PARTIDO_{nLocal}_VS_{nAway}";
@@ -357,7 +348,7 @@ public class Program
 
         trackedMatch.IsActive = false;
         trackedMatch.FinishedAt = DateTime.UtcNow;
-        db.SaveChanges(); // Persistimos cierre histórico
+        db.SaveChanges(); 
 
         var finalSnapshot = db.Matches.AsNoTracking().FirstOrDefault(m => m.Id == trackedMatch.Id);
         var scoreSource = finalSnapshot ?? trackedMatch;
