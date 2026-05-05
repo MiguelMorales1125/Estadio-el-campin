@@ -5,8 +5,6 @@ using StadiumSystem.Infrastructure.Security;
 
 namespace StadiumSystem.Controllers;
 
-<summary>
-</summary>
 public class AuthController
 {
     private readonly AppDbContext _dbContext;
