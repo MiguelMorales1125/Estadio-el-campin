@@ -1,6 +1,5 @@
 using System.IO.Ports;
 using StadiumSystem.Commands;
-using StadiumSystem.Events;
 
 namespace StadiumSystem.Infrastructure;
 
@@ -8,7 +7,6 @@ namespace StadiumSystem.Infrastructure;
 public class ArduinoConnection : IDisposable
 {
     private readonly SerialPort _port;
-    private readonly EventBus _eventBus;
     private static ArduinoConnection? _instance;
 
     private readonly object _bufferLock = new();
@@ -18,8 +16,6 @@ public class ArduinoConnection : IDisposable
 
     private ArduinoConnection()
     {
-        _eventBus = EventBus.GetInstance();
-
         string portName = System.Environment.GetEnvironmentVariable("COM_PORT") ?? "COM3";
         int baud = int.TryParse(
             System.Environment.GetEnvironmentVariable("COM_BAUD"),
@@ -87,8 +83,6 @@ public class ArduinoConnection : IDisposable
     {
         MessageReceived?.Invoke(message);
     }
-
-    public void ProcessInventory(string inventory) { }
 
     public void Dispose()
     {

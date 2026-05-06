@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using StadiumSystem.Controllers;
 using StadiumSystem.Domain.Entities;
+using StadiumSystem.Events;
 using StadiumSystem.Infrastructure;
 using StadiumSystem.Infrastructure.Data;
 using StadiumSystem.Infrastructure.Security;
@@ -24,7 +25,9 @@ public class Program
         try { authController.SeedAdminIfNotExists(); } catch { }
 
         var arduino = ArduinoConnection.GetInstance();
-        arduino.MessageReceived += OnArduinoMessage;
+        var eventBus = EventBus.GetInstance();
+        using var arduinoBridge = new ArduinoMessageBusAdapter(arduino, eventBus);
+        eventBus.Subscribe(ArduinoMessageReceivedEvent.TypeName, OnArduinoEvent);
         arduino.StartListening();
 
         bool isRunning = true;
@@ -50,6 +53,12 @@ public class Program
     private static readonly object _arduinoGoalLock = new();
     private static DateTime _lastMovSeenUtc = DateTime.MinValue;
     private static bool _goalAlreadyCountedForThisEvent = false;
+
+    private static void OnArduinoEvent(IEvent @event)
+    {
+        if (@event is not ArduinoMessageReceivedEvent arduinoEvent) return;
+        OnArduinoMessage(arduinoEvent.Message);
+    }
 
     private static string? CurrentFlash()
     {

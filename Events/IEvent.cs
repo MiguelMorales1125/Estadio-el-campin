@@ -3,5 +3,5 @@ namespace StadiumSystem.Events;
 
 public interface IEvent
 {
-    string GetType();
+    string EventType { get; }
 }
