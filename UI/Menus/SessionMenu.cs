@@ -4,6 +4,7 @@ using System.Threading;
 using Microsoft.EntityFrameworkCore;
 using Spectre.Console;
 using StadiumSystem.Domain.Entities;
+using StadiumSystem.Domain.Enums;
 using StadiumSystem.Infrastructure.Data;
 using StadiumSystem.UI.Theming;
 
@@ -100,7 +101,7 @@ public static class SessionMenu
 
             string mode = db.StadiumStates
                 .AsNoTracking()
-                .FirstOrDefault(s => s.Id == 1)?.Mode ?? "APAGADO";
+                .FirstOrDefault(s => s.Id == 1)?.Mode.ToString() ?? "APAGADO";
 
             var activeMatch = db.Matches
                 .AsNoTracking()

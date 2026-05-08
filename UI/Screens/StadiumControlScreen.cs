@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Spectre.Console;
 using StadiumSystem.Domain.Entities;
+using StadiumSystem.Domain.Enums;
 using StadiumSystem.Infrastructure.Data;
 using StadiumSystem.UI.Theming;
 
@@ -148,7 +149,7 @@ public static class StadiumControlScreen
                 var stadiumState = db.StadiumStates.FirstOrDefault(s => s.Id == 1);
                 if (stadiumState is not null)
                 {
-                    stadiumState.Mode = selectedState;
+                    stadiumState.Mode = Enum.Parse<StadiumStates>(selectedState);
                 }
 
                 db.SaveChanges();
@@ -170,11 +171,11 @@ public static class StadiumControlScreen
 
                 if (stadiumState is not null)
                 {
-                    stadiumState.Mode = selectedState;
+                    stadiumState.Mode = Enum.Parse<StadiumStates>(selectedState);
                 }
                 else
                 {
-                    db.StadiumStates.Add(new StadiumState { Id = 1, Mode = selectedState });
+                    db.StadiumStates.Add(new StadiumState { Id = 1, Mode = Enum.Parse<StadiumStates>(selectedState) });
                 }
 
                 db.SaveChanges();
@@ -292,7 +293,7 @@ public static class StadiumControlScreen
                 .AsNoTracking()
                 .FirstOrDefault(s => s.Id == 1);
 
-            string mode = stadiumState?.Mode ?? "DISPONIBLE";
+            string mode = stadiumState?.Mode.ToString() ?? "DISPONIBLE";
 
             var activeMatch = db.Matches
                 .AsNoTracking()

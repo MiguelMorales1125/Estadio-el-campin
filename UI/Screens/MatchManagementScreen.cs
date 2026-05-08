@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Spectre.Console;
 using StadiumSystem.Domain.Entities;
+using StadiumSystem.Domain.Enums;
 using StadiumSystem.Infrastructure.Data;
 using StadiumSystem.UI.Theming;
 
@@ -22,7 +23,7 @@ public static class MatchManagementScreen
             var activeMatch = GetActiveMatch();
             RenderMatchStatus(activeMatch);
 
-            var options = new[] { "Ver partido actual", "Crear nuevo partido", "Actualizar marcador", "Volver" };
+            var options = new[] { "Ver partido actual", "Crear nuevo partido", "Actualizar marcador", "Terminar partido actual", "Ver historial de partidos", "Volver" };
             int selected = 0;
 
             bool choosingOption = true;
@@ -70,6 +71,12 @@ public static class MatchManagementScreen
                     UpdateScore();
                     break;
                 case 3:
+                    FinishMatch();
+                    break;
+                case 4:
+                    ViewMatchHistory();
+                    break;
+                case 5:
                     running = false;
                     break;
             }
@@ -173,11 +180,11 @@ public static class MatchManagementScreen
             var stadiumState = db.StadiumStates.FirstOrDefault(s => s.Id == 1);
             if (stadiumState is not null)
             {
-                stadiumState.Mode = "ACTIVO";
+                stadiumState.Mode = StadiumStates.ACTIVO;
             }
             else
             {
-                db.StadiumStates.Add(new StadiumState { Id = 1, Mode = "ACTIVO" });
+                db.StadiumStates.Add(new StadiumState { Id = 1, Mode = StadiumStates.ACTIVO });
             }
 
             db.SaveChanges();
@@ -260,6 +267,135 @@ public static class MatchManagementScreen
         catch (Exception ex)
         {
             AnsiConsole.MarkupLine(Theme.Danger($"Error al actualizar el marcador: {Markup.Escape(ex.Message)}"));
+        }
+
+        Pause();
+    }
+
+    private static void FinishMatch()
+    {
+        AnsiConsole.Clear();
+        AnsiConsole.Write(new FigletText("Terminar Partido").Centered().Color(Theme.HeaderColor));
+
+        var match = GetActiveMatch();
+
+        if (match is null)
+        {
+            AnsiConsole.MarkupLine(Theme.Danger("Error: No hay un partido activo."));
+            Pause();
+            return;
+        }
+
+        AnsiConsole.MarkupLine($"Marcador final: {Markup.Escape(match.TeamLocal)} {match.ScoreLocal} - {match.ScoreAway} {Markup.Escape(match.TeamAway)}");
+        AnsiConsole.MarkupLine(string.Empty);
+
+        bool confirm = AnsiConsole.Confirm(
+            Theme.Accent("¿Deseas finalizar este partido?"),
+            false);
+
+        if (!confirm)
+        {
+            AnsiConsole.MarkupLine(Theme.Muted("Operación cancelada."));
+            Pause();
+            return;
+        }
+
+        try
+        {
+            using var db = new AppDbContext();
+            var matchToFinish = db.Matches.FirstOrDefault(m => m.Id == match.Id && m.IsActive);
+
+            if (matchToFinish is not null)
+            {
+                matchToFinish.IsActive = false;
+                matchToFinish.FinishedAt = DateTime.UtcNow;
+
+                // Update stadium state to DISPONIBLE
+                var stadiumState = db.StadiumStates.FirstOrDefault(s => s.Id == 1);
+                if (stadiumState is not null)
+                {
+                    stadiumState.Mode = StadiumStates.DISPONIBLE;
+                }
+
+                db.SaveChanges();
+
+                AnsiConsole.MarkupLine(Theme.Success("✓ Partido finalizado exitosamente."));
+                AnsiConsole.MarkupLine(Theme.Muted($"  Resultado final: {Markup.Escape(matchToFinish.TeamLocal)} {matchToFinish.ScoreLocal} - {matchToFinish.ScoreAway} {Markup.Escape(matchToFinish.TeamAway)}"));
+                AnsiConsole.MarkupLine(Theme.Muted("  El estado del estadio fue cambiado a: DISPONIBLE"));
+            }
+            else
+            {
+                AnsiConsole.MarkupLine(Theme.Danger("Error: No se encontró el partido."));
+            }
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLine(Theme.Danger($"Error al finalizar el partido: {Markup.Escape(ex.Message)}"));
+        }
+
+        Pause();
+    }
+
+    private static void ViewMatchHistory()
+    {
+        AnsiConsole.Clear();
+        AnsiConsole.Write(new FigletText("Historial de Partidos").Centered().Color(Theme.HeaderColor));
+
+        try
+        {
+            using var db = new AppDbContext();
+            var finishedMatches = db.Matches
+                .AsNoTracking()
+                .Where(m => !m.IsActive && m.FinishedAt.HasValue)
+                .OrderByDescending(m => m.FinishedAt)
+                .ToList();
+
+            if (!finishedMatches.Any())
+            {
+                AnsiConsole.MarkupLine(Theme.Muted("No hay partidos finalizados aún."));
+                Pause();
+                return;
+            }
+
+            var table = new Table()
+                .AddColumn(Theme.Accent("Fecha"))
+                .AddColumn(Theme.Accent("Equipo Local"))
+                .AddColumn(Theme.Accent("Marcador"))
+                .AddColumn(Theme.Accent("Equipo Visitante"))
+                .AddColumn(Theme.Accent("Duración"))
+                .Border(TableBorder.Rounded)
+                .BorderStyle(new Style(Theme.Current.Accent));
+
+            foreach (var match in finishedMatches)
+            {
+                string fecha = match.FinishedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A";
+                string duracion = "";
+
+                if (match.FinishedAt.HasValue)
+                {
+                    var diff = match.FinishedAt.Value - match.CreatedAt;
+                    duracion = $"{diff.Hours}h {diff.Minutes}m";
+                }
+
+                table.AddRow(
+                    fecha,
+                    $"[bold]{Markup.Escape(match.TeamLocal)}[/]",
+                    $"[bold green]{match.ScoreLocal}[/] [dim]-[/] [bold green]{match.ScoreAway}[/]",
+                    $"[bold]{Markup.Escape(match.TeamAway)}[/]",
+                    duracion);
+            }
+
+            AnsiConsole.Write(new Panel(table)
+                .Border(BoxBorder.Rounded)
+                .BorderStyle(new Style(Theme.Current.Accent))
+                .Padding(1, 1, 1, 1));
+
+            AnsiConsole.MarkupLine(string.Empty);
+            AnsiConsole.MarkupLine(Theme.Muted($"Total de partidos jugados: {finishedMatches.Count}"));
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLine(Theme.Danger($"Error al cargar el historial: {Markup.Escape(ex.Message)}"));
         }
 
         Pause();
