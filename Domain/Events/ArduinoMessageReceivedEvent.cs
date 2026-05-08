@@ -1,4 +1,4 @@
-namespace StadiumSystem.Events;
+namespace StadiumSystem.Domain.Events;
 
 public sealed class ArduinoMessageReceivedEvent : IEvent
 {

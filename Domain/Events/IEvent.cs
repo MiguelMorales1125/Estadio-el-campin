@@ -1,5 +1,4 @@
-namespace StadiumSystem.Events;
-
+namespace StadiumSystem.Domain.Events;
 
 public interface IEvent
 {

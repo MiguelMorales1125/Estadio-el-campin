@@ -1,6 +1,7 @@
 using StadiumSystem.Domain;
-using StadiumSystem.Enums;
-using StadiumSystem.Events;
+using StadiumSystem.Domain.Enums;
+using StadiumSystem.Domain.Events;
+using StadiumSystem.Infrastructure.Events;
 using StadiumSystem.Infrastructure;
 
 namespace StadiumSystem.Controllers;

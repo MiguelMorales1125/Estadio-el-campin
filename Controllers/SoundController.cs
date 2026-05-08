@@ -1,6 +1,6 @@
 using StadiumSystem.Audio;
-using StadiumSystem.Enums;
-using StadiumSystem.Events;
+using StadiumSystem.Domain.Enums;
+using StadiumSystem.Domain.Events;
 
 namespace StadiumSystem.Controllers;
 

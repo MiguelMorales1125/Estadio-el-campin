@@ -1,4 +1,6 @@
-namespace StadiumSystem.Events;
+using StadiumSystem.Domain.Events;
+
+namespace StadiumSystem.Infrastructure.Events;
 
 public class EventBus
 {

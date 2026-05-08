@@ -1,58 +1,21 @@
-using System.Linq;
 using StadiumSystem.Domain.Entities;
-using StadiumSystem.Infrastructure.Data;
-using StadiumSystem.Infrastructure.Security;
+using StadiumSystem.Services;
 
 namespace StadiumSystem.Controllers;
 
 public class AuthController
 {
-    private readonly AppDbContext _dbContext;
-    private readonly IPasswordHasher _passwordHasher;
+    private readonly AuthService _authService;
 
-    public AuthController(AppDbContext dbContext, IPasswordHasher passwordHasher)
+    public AuthController(AuthService authService)
     {
-        _dbContext = dbContext;
-        _passwordHasher = passwordHasher;
+        _authService = authService;
     }
 
-    public void SeedAdminIfNotExists()
-    {
-        if (!_dbContext.Users.Any(u => u.Username == "admin"))
-        {
-            _dbContext.Users.Add(new User 
-            { 
-                Username = "admin", 
-                PasswordHash = _passwordHasher.HashPassword("admin123"), 
-                Role = "ADMIN" 
-            });
-            _dbContext.SaveChanges();
-        }
-    }
+    public void SeedAdminIfNotExists() => _authService.SeedAdminIfNotExists();
 
-    public User? Login(string username, string password)
-    {
-        var user = _dbContext.Users.FirstOrDefault(u => u.Username == username);
-        if (user == null) return null;
-
-        bool isValid = _passwordHasher.VerifyPassword(password, user.PasswordHash);
-        return isValid ? user : null;
-    }
+    public User? Login(string username, string password) => _authService.Login(username, password);
 
     public bool RegisterUser(string newUsername, string newPassword, string role, User currentUser)
-    {
-        if (currentUser.Role != "ADMIN") return false;
-        if (_dbContext.Users.Any(u => u.Username == newUsername)) return false;
-
-        var newUser = new User
-        {
-            Username = newUsername,
-            PasswordHash = _passwordHasher.HashPassword(newPassword),
-            Role = role
-        };
-
-        _dbContext.Users.Add(newUser);
-        _dbContext.SaveChanges();
-        return true;
-    }
+        => _authService.RegisterUser(newUsername, newPassword, role, currentUser);
 }

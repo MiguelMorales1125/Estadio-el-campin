@@ -1,5 +1,6 @@
 using StadiumSystem.Audio;
-using StadiumSystem.Events;
+using StadiumSystem.Domain.Events;
+using StadiumSystem.Domain.Enums;
 
 namespace StadiumSystem.Devices.Actuators;
 
@@ -13,7 +14,7 @@ public class Buzzer : IActuator, IAudioDevice
     public void NoTone() { }
 
 
-    public void Play(Enums.SoundTracks track) { }
-    public void Stop(Enums.SoundTracks track) { }
+    public void Play(SoundTracks track) { }
+    public void Stop(SoundTracks track) { }
     public void SetVolume(double volume) { }
 }

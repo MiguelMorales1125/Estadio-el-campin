@@ -1,5 +1,5 @@
 using StadiumSystem.Domain;
-using StadiumSystem.Events;
+using StadiumSystem.Domain.Events;
 
 namespace StadiumSystem.Controllers;
 

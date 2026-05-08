@@ -1,4 +1,5 @@
-using StadiumSystem.Events;
+using StadiumSystem.Domain.Events;
+using StadiumSystem.Infrastructure.Events;
 
 namespace StadiumSystem.Infrastructure;
 

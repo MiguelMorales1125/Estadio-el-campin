@@ -1,4 +1,4 @@
-using StadiumSystem.Enums;
+using StadiumSystem.Domain.Enums;
 
 namespace StadiumSystem.Audio;
 
