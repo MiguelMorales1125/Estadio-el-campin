@@ -15,7 +15,4 @@ public class AuthController
     public void SeedAdminIfNotExists() => _authService.SeedAdminIfNotExists();
 
     public User? Login(string username, string password) => _authService.Login(username, password);
-
-    public bool RegisterUser(string newUsername, string newPassword, string role, User currentUser)
-        => _authService.RegisterUser(newUsername, newPassword, role, currentUser);
 }

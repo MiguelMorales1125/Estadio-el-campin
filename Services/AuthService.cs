@@ -60,25 +60,4 @@ public class AuthService
         bool isValid = _passwordHasher.VerifyPassword(password, user.PasswordHash);
         return isValid ? user : null;
     }
-
-    public bool RegisterUser(string newUsername, string newPassword, string role, User currentUser)
-    {
-        if (currentUser.Role != Roles.ADMIN.ToString()) return false;
-        if (_dbContext.Users.Any(u => u.Username == newUsername)) return false;
-
-        // Validate role against enum
-        bool validRole = System.Enum.TryParse<Roles>(role, true, out var parsedRole);
-        if (!validRole) return false;
-
-        var newUser = new User
-        {
-            Username = newUsername,
-            PasswordHash = _passwordHasher.HashPassword(newPassword),
-            Role = parsedRole.ToString()
-        };
-
-        _dbContext.Users.Add(newUser);
-        _dbContext.SaveChanges();
-        return true;
-    }
 }
