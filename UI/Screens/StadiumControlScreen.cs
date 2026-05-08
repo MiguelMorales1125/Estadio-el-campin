@@ -5,6 +5,7 @@ using Spectre.Console;
 using StadiumSystem.Domain.Entities;
 using StadiumSystem.Domain.Enums;
 using StadiumSystem.Infrastructure.Data;
+using StadiumSystem.Services;
 using StadiumSystem.UI.Theming;
 
 namespace StadiumSystem.UI.Screens;
@@ -64,7 +65,7 @@ public static class StadiumControlScreen
             switch (selected)
             {
                 case 0:
-                    ChangeStadiumState();
+                    ChangeStadiumState(currentUser);
                     break;
                 case 1:
                     ShowStateInformation();
@@ -76,7 +77,7 @@ public static class StadiumControlScreen
         }
     }
 
-    private static void ChangeStadiumState()
+    private static void ChangeStadiumState(User currentUser)
     {
         AnsiConsole.Clear();
         AnsiConsole.Write(new FigletText("Cambiar Estado").Centered().Color(Theme.HeaderColor));
@@ -86,7 +87,6 @@ public static class StadiumControlScreen
         AnsiConsole.MarkupLine($"Estado actual: [bold]{Markup.Escape(currentMode)}[/]");
         AnsiConsole.MarkupLine(string.Empty);
 
-        // Determine available options based on current state and match
         var availableStates = DetermineAvailableStates(currentMode, activeMatch);
 
         if (availableStates.Count == 0)
@@ -113,7 +113,6 @@ public static class StadiumControlScreen
             return;
         }
 
-        // Validate state change
         string? validationError = ValidateStateChange(currentMode, selectedState, activeMatch);
         if (validationError is not null)
         {
@@ -122,7 +121,6 @@ public static class StadiumControlScreen
             return;
         }
 
-        // Handle state change for ACTIVO -> DISPONIBLE (finish match)
         if (currentMode == "ACTIVO" && selectedState == "DISPONIBLE" && activeMatch is not null)
         {
             bool confirm = AnsiConsole.Confirm(
@@ -139,6 +137,7 @@ public static class StadiumControlScreen
             try
             {
                 using var db = new AppDbContext();
+                var auditLogService = new AuditLogService(db);
                 var match = db.Matches.FirstOrDefault(m => m.Id == activeMatch.Id);
                 if (match is not null)
                 {
@@ -153,6 +152,7 @@ public static class StadiumControlScreen
                 }
 
                 db.SaveChanges();
+                auditLogService.Log(currentUser, "CHANGE_STATE", CommandCategory.DATABASE, $"Estado del estadio: {currentMode} -> {selectedState}. Partido finalizado: {(activeMatch is not null ? activeMatch.TeamLocal + " vs " + activeMatch.TeamAway : "N/A")}");
 
                 AnsiConsole.MarkupLine(Theme.Success("✓ Partido finalizado."));
                 AnsiConsole.MarkupLine(Theme.Success($"✓ Estado del estadio cambiado a: {Markup.Escape(selectedState)}"));
@@ -167,7 +167,9 @@ public static class StadiumControlScreen
             try
             {
                 using var db = new AppDbContext();
+                var auditLogService = new AuditLogService(db);
                 var stadiumState = db.StadiumStates.FirstOrDefault(s => s.Id == 1);
+                string previousState = stadiumState?.Mode.ToString() ?? currentMode;
 
                 if (stadiumState is not null)
                 {
@@ -179,6 +181,7 @@ public static class StadiumControlScreen
                 }
 
                 db.SaveChanges();
+                auditLogService.Log(currentUser, "CHANGE_STATE", CommandCategory.DATABASE, $"Estado del estadio: {previousState} -> {selectedState}");
 
                 AnsiConsole.MarkupLine(Theme.Success($"✓ Estado del estadio cambiado a: {Markup.Escape(selectedState)}"));
             }
@@ -229,21 +232,21 @@ public static class StadiumControlScreen
         switch (currentMode)
         {
             case "DISPONIBLE":
-                available.Add("ACTIVO");    // Can start a match
-                available.Add("MANTENIMIENTO"); // Can go to maintenance
+                available.Add("ACTIVO");
+                available.Add("MANTENIMIENTO");
                 break;
 
             case "ACTIVO":
-                available.Add("DISPONIBLE"); // Can finish the match
-                available.Add("MANTENIMIENTO"); // Can go to maintenance (will finish match)
+                available.Add("DISPONIBLE");
+                available.Add("MANTENIMIENTO");
                 break;
 
             case "MANTENIMIENTO":
-                available.Add("DISPONIBLE"); // Can exit maintenance
+                available.Add("DISPONIBLE");
                 break;
 
             default:
-                available.Add("DISPONIBLE"); // Default: reset to available
+                available.Add("DISPONIBLE");
                 break;
         }
 
@@ -252,20 +255,15 @@ public static class StadiumControlScreen
 
     private static string? ValidateStateChange(string currentMode, string newState, MatchSession? activeMatch)
     {
-        // Can't go to ACTIVO without an active match
         if (newState == "ACTIVO" && activeMatch is null)
         {
             return "No hay un partido activo para activar el estadio.";
         }
 
-        // Can't stay in same state
         if (currentMode == newState)
         {
             return "El estado ya es ese.";
         }
-
-        // Can't go to MANTENIMIENTO with an active match without confirmation
-        // (confirmation is handled in ChangeStadiumState)
 
         return null;
     }

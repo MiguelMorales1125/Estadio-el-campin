@@ -5,6 +5,7 @@ using Spectre.Console;
 using StadiumSystem.Domain.Entities;
 using StadiumSystem.Domain.Enums;
 using StadiumSystem.Infrastructure.Data;
+using StadiumSystem.Services;
 using StadiumSystem.UI.Theming;
 
 namespace StadiumSystem.UI.Screens;
@@ -65,13 +66,13 @@ public static class MatchManagementScreen
                     ViewCurrentMatch();
                     break;
                 case 1:
-                    CreateNewMatch();
+                    CreateNewMatch(currentUser);
                     break;
                 case 2:
-                    UpdateScore();
+                    UpdateScore(currentUser);
                     break;
                 case 3:
-                    FinishMatch();
+                    FinishMatch(currentUser);
                     break;
                 case 4:
                     ViewMatchHistory();
@@ -118,12 +119,11 @@ public static class MatchManagementScreen
         Pause();
     }
 
-    private static void CreateNewMatch()
+    private static void CreateNewMatch(User currentUser)
     {
         AnsiConsole.Clear();
         AnsiConsole.Write(new FigletText("Nuevo Partido").Centered().Color(Theme.HeaderColor));
 
-        // Check if match already exists
         var existingMatch = GetActiveMatch();
         if (existingMatch is not null)
         {
@@ -133,7 +133,6 @@ public static class MatchManagementScreen
             return;
         }
 
-        // Get team names
         string teamLocal = AnsiConsole.Prompt(
             new TextPrompt<string>($"{Theme.Accent("Equipo Local")}: ")
                 .Validate(v => !string.IsNullOrWhiteSpace(v)
@@ -163,6 +162,7 @@ public static class MatchManagementScreen
         try
         {
             using var db = new AppDbContext();
+            var auditLogService = new AuditLogService(db);
 
             var newMatch = new MatchSession
             {
@@ -176,7 +176,6 @@ public static class MatchManagementScreen
 
             db.Matches.Add(newMatch);
 
-            // Update stadium state to ACTIVO
             var stadiumState = db.StadiumStates.FirstOrDefault(s => s.Id == 1);
             if (stadiumState is not null)
             {
@@ -188,6 +187,7 @@ public static class MatchManagementScreen
             }
 
             db.SaveChanges();
+            auditLogService.Log(currentUser, "CREATE_MATCH", CommandCategory.DATABASE, $"Partido creado: {teamLocal.Trim()} vs {teamAway.Trim()}");
 
             AnsiConsole.MarkupLine(Theme.Success("✓ Partido creado exitosamente."));
             AnsiConsole.MarkupLine(Theme.Muted($"  {Markup.Escape(teamLocal)} vs {Markup.Escape(teamAway)}"));
@@ -201,7 +201,7 @@ public static class MatchManagementScreen
         Pause();
     }
 
-    private static void UpdateScore()
+    private static void UpdateScore(User currentUser)
     {
         AnsiConsole.Clear();
         AnsiConsole.Write(new FigletText("Actualizar Marcador").Centered().Color(Theme.HeaderColor));
@@ -241,6 +241,7 @@ public static class MatchManagementScreen
         try
         {
             using var db = new AppDbContext();
+            var auditLogService = new AuditLogService(db);
             var matchToUpdate = db.Matches.FirstOrDefault(m => m.Id == match.Id && m.IsActive);
 
             if (matchToUpdate is null)
@@ -260,6 +261,7 @@ public static class MatchManagementScreen
             }
 
             db.SaveChanges();
+            auditLogService.Log(currentUser, "UPDATE_SCORE", CommandCategory.DATABASE, $"{matchToUpdate.TeamLocal} {matchToUpdate.ScoreLocal} - {matchToUpdate.ScoreAway} {matchToUpdate.TeamAway}. Equipo que anotó: {selectedTeam}. Goles agregados: {goalsToAdd}");
 
             AnsiConsole.MarkupLine(Theme.Success("✓ Marcador actualizado."));
             AnsiConsole.MarkupLine(Theme.Muted($"  Nuevo marcador: {Markup.Escape(matchToUpdate.TeamLocal)} {matchToUpdate.ScoreLocal} - {matchToUpdate.ScoreAway} {Markup.Escape(matchToUpdate.TeamAway)}"));
@@ -272,7 +274,7 @@ public static class MatchManagementScreen
         Pause();
     }
 
-    private static void FinishMatch()
+    private static void FinishMatch(User currentUser)
     {
         AnsiConsole.Clear();
         AnsiConsole.Write(new FigletText("Terminar Partido").Centered().Color(Theme.HeaderColor));
@@ -303,6 +305,7 @@ public static class MatchManagementScreen
         try
         {
             using var db = new AppDbContext();
+            var auditLogService = new AuditLogService(db);
             var matchToFinish = db.Matches.FirstOrDefault(m => m.Id == match.Id && m.IsActive);
 
             if (matchToFinish is not null)
@@ -310,7 +313,6 @@ public static class MatchManagementScreen
                 matchToFinish.IsActive = false;
                 matchToFinish.FinishedAt = DateTime.UtcNow;
 
-                // Update stadium state to DISPONIBLE
                 var stadiumState = db.StadiumStates.FirstOrDefault(s => s.Id == 1);
                 if (stadiumState is not null)
                 {
@@ -318,6 +320,7 @@ public static class MatchManagementScreen
                 }
 
                 db.SaveChanges();
+                auditLogService.Log(currentUser, "FINISH_MATCH", CommandCategory.DATABASE, $"Partido finalizado: {matchToFinish.TeamLocal} {matchToFinish.ScoreLocal} - {matchToFinish.ScoreAway} {matchToFinish.TeamAway}");
 
                 AnsiConsole.MarkupLine(Theme.Success("✓ Partido finalizado exitosamente."));
                 AnsiConsole.MarkupLine(Theme.Muted($"  Resultado final: {Markup.Escape(matchToFinish.TeamLocal)} {matchToFinish.ScoreLocal} - {matchToFinish.ScoreAway} {Markup.Escape(matchToFinish.TeamAway)}"));

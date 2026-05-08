@@ -11,11 +11,13 @@ public class AuthService
 {
     private readonly AppDbContext _dbContext;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly AuditLogService _auditLogService;
 
-    public AuthService(AppDbContext dbContext, IPasswordHasher passwordHasher)
+    public AuthService(AppDbContext dbContext, IPasswordHasher passwordHasher, AuditLogService auditLogService)
     {
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
+        _auditLogService = auditLogService;
     }
 
     public void SeedAdminIfNotExists()
@@ -58,6 +60,11 @@ public class AuthService
         if (user == null) return null;
 
         bool isValid = _passwordHasher.VerifyPassword(password, user.PasswordHash);
+        if (isValid)
+        {
+            _auditLogService.Log(user, "LOGIN", CommandCategory.AUTH, $"Usuario '{user.Username}' inició sesión");
+        }
+
         return isValid ? user : null;
     }
 }

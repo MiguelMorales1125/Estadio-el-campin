@@ -12,6 +12,7 @@ ThemeManager.ConfigureFromEnvironment();
 var services = new ServiceCollection();
 services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 services.AddScoped<AppDbContext>();
+services.AddScoped<AuditLogService>();
 services.AddScoped<AuthService>();
 services.AddScoped<UserService>();
 services.AddScoped<AuthController>();

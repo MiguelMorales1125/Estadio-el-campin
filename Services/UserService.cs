@@ -12,11 +12,13 @@ public sealed class UserService
 {
     private readonly AppDbContext _dbContext;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly AuditLogService _auditLogService;
 
-    public UserService(AppDbContext dbContext, IPasswordHasher passwordHasher)
+    public UserService(AppDbContext dbContext, IPasswordHasher passwordHasher, AuditLogService auditLogService)
     {
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
+        _auditLogService = auditLogService;
     }
 
     public List<User> GetUsers(User currentUser)
@@ -51,6 +53,7 @@ public sealed class UserService
 
         _dbContext.Users.Add(newUser);
         _dbContext.SaveChanges();
+        _auditLogService.Log(currentUser, "REGISTER_USER", CommandCategory.ADMIN, $"Creó usuario '{newUser.Username}' con rol {newUser.Role}");
         return (true, $"Usuario '{newUser.Username}' creado correctamente.");
     }
 
@@ -76,6 +79,7 @@ public sealed class UserService
 
         _dbContext.Users.RemoveRange(usersToDelete);
         _dbContext.SaveChanges();
+        _auditLogService.Log(currentUser, "DELETE_USERS", CommandCategory.ADMIN, $"Eliminó usuarios: {string.Join(", ", usersToDelete.Select(u => u.Username))}");
         return (true, $"Se borraron {usersToDelete.Count} usuario(s).");
     }
 
