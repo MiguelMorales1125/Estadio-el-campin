@@ -15,13 +15,14 @@ public class StadiumController : IEventHandler
     private LightController _lightController;
     private EventBus _eventBus;
 
-    public StadiumController()
+    public StadiumController(IDeviceRegistry deviceRegistry, ScoreController scoreController, SoundController soundController, LightController lightController)
     {
-        _stadium        = new Stadium();
-        _soundController = new SoundController();
-        _scoreController = new ScoreController();
-        _lightController = new LightController();
+        _stadium = new Stadium();
+        _soundController = soundController;
+        _scoreController = scoreController;
+        _lightController = lightController;
         _eventBus = EventBus.GetInstance();
+        _eventBus.Subscribe("MovementDetected", e => Handle(e));
     }
 
 
@@ -33,5 +34,11 @@ public class StadiumController : IEventHandler
 
     public void ActivateEmergencyMode() { }
 
-    public void Handle(IEvent @event) { }
+    public void Handle(IEvent @event)
+    {
+        if (@event == null) return;
+        _scoreController.Handle(@event);
+        _soundController.Handle(@event);
+        _lightController.Handle(@event);
+    }
 }

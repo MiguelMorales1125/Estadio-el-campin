@@ -6,15 +6,38 @@ namespace StadiumSystem.Devices.Actuators;
 
 public class Buzzer : IActuator, IAudioDevice
 {
+    public int Pin { get; set; }
     public bool IsOn { get; private set; }
 
-    public void On() { }
-    public void Off() { }
-    public void Tone(int hz) { }
-    public void NoTone() { }
+    public void On()
+    {
+        IsOn = true;
+    }
 
+    public void Off()
+    {
+        IsOn = false;
+    }
 
-    public void Play(SoundTracks track) { }
-    public void Stop(SoundTracks track) { }
+    public void Tone(int hz)
+    {
+        On();
+    }
+
+    public void NoTone()
+    {
+        Off();
+    }
+
+    public void Play(SoundTracks track)
+    {
+        On();
+    }
+
+    public void Stop(SoundTracks track)
+    {
+        Off();
+    }
+
     public void SetVolume(double volume) { }
 }

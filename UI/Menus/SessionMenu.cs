@@ -14,6 +14,7 @@ public enum SessionMenuOption
 {
     MatchManagement,
     StadiumControl,
+    TerminalLogs,
     Users,
     Logout,
     Exit
@@ -79,7 +80,8 @@ public static class SessionMenu
         var items = new List<MenuItem>
         {
             new(SessionMenuOption.MatchManagement, "Gestión de Partidos"),
-            new(SessionMenuOption.StadiumControl, "Control del Estadio")
+            new(SessionMenuOption.StadiumControl, "Control del Estadio"),
+            new(SessionMenuOption.TerminalLogs, "Ver logs de terminal")
         };
 
         if (isAdmin)

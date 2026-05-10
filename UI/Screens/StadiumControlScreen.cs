@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Spectre.Console;
+using StadiumSystem.Controllers;
 using StadiumSystem.Domain.Entities;
 using StadiumSystem.Domain.Enums;
 using StadiumSystem.Infrastructure.Data;
@@ -12,7 +13,7 @@ namespace StadiumSystem.UI.Screens;
 
 public static class StadiumControlScreen
 {
-    public static void Show(User currentUser)
+    public static void Show(User currentUser, LightController lightController)
     {
         bool running = true;
 
@@ -24,7 +25,7 @@ public static class StadiumControlScreen
             var (stadiumMode, activeMatch) = GetCurrentState();
             RenderCurrentState(stadiumMode, activeMatch);
 
-            var options = new[] { "Cambiar estado del estadio", "Información de estado", "Volver" };
+            var options = new[] { "Cambiar estado del estadio", "Encender LEDs", "Apagar LEDs", "Información de estado", "Volver" };
             int selected = 0;
 
             bool choosingOption = true;
@@ -68,13 +69,41 @@ public static class StadiumControlScreen
                     ChangeStadiumState(currentUser);
                     break;
                 case 1:
-                    ShowStateInformation();
+                    TurnLightsOn(lightController);
                     break;
                 case 2:
+                    TurnLightsOff(lightController);
+                    break;
+                case 3:
+                    ShowStateInformation();
+                    break;
+                case 4:
                     running = false;
                     break;
             }
         }
+    }
+
+    private static void TurnLightsOn(LightController lightController)
+    {
+        AnsiConsole.Clear();
+        AnsiConsole.Write(new FigletText("LEDs Encendidos").Centered().Color(Theme.HeaderColor));
+
+        lightController.TurnLightsOn();
+
+        AnsiConsole.MarkupLine(Theme.Success("✓ Se enviaron comandos para encender los LEDs."));
+        Pause();
+    }
+
+    private static void TurnLightsOff(LightController lightController)
+    {
+        AnsiConsole.Clear();
+        AnsiConsole.Write(new FigletText("LEDs Apagados").Centered().Color(Theme.HeaderColor));
+
+        lightController.TurnLightsOff();
+
+        AnsiConsole.MarkupLine(Theme.Success("✓ Se enviaron comandos para apagar los LEDs."));
+        Pause();
     }
 
     private static void ChangeStadiumState(User currentUser)

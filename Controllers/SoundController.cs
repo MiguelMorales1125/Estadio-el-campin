@@ -8,7 +8,7 @@ namespace StadiumSystem.Controllers;
 public class SoundController : IEventHandler
 {
     public SoundTracks CurrentTrack { get; private set; }
-    private IAudioDevice _audioDevice;
+    private IAudioDevice? _audioDevice;
 
     public SoundController() { }
 

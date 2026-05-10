@@ -10,11 +10,15 @@ public sealed class ConsoleApp
 {
     private readonly AuthController _authController;
     private readonly UserController _userController;
+    private readonly LightController _lightController;
+    private readonly StadiumSystem.Services.ITerminalLogService _logService;
 
-    public ConsoleApp(AuthController authController, UserController userController)
+    public ConsoleApp(AuthController authController, UserController userController, LightController lightController, StadiumSystem.Services.ITerminalLogService logService)
     {
         _authController = authController;
         _userController = userController;
+        _lightController = lightController;
+        _logService = logService;
     }
 
     public void Run()
@@ -57,7 +61,10 @@ public sealed class ConsoleApp
                     MatchManagementScreen.Show(authenticatedUser);
                     break;
                 case SessionMenuOption.StadiumControl:
-                    StadiumControlScreen.Show(authenticatedUser);
+                    StadiumControlScreen.Show(authenticatedUser, _lightController);
+                    break;
+                case SessionMenuOption.TerminalLogs:
+                    StadiumSystem.UI.Screens.TerminalLogsScreen.Show(_logService);
                     break;
                 case SessionMenuOption.Users:
                     UserManagementScreen.Show(_userController, authenticatedUser);
