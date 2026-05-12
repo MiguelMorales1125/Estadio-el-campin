@@ -49,4 +49,14 @@ _ReSharper*/
 
 publish/
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 .virtual-serial/
+
+.planning/
+
+__pycache__/

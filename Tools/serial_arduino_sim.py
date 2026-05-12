@@ -6,7 +6,7 @@ import platform
 
 IS_WINDOWS = platform.system() == "Windows"
 DEFAULT_PORT = 'COM11' if IS_WINDOWS else '/dev/pts/4'
-DEFAULT_INVENTORY = 'INVENTORY:SENSOR:PIR_HOME:2,SENSOR:PIR_AWAY:3,ACTUATOR:BUZZER:3,ACTUATOR:LCD:4,LED:5,LED:6,LED:7,LED:8'
+DEFAULT_INVENTORY = 'INVENTORY:SENSOR:PIR_HOME:2,SENSOR:PIR_AWAY:3,LED:5,LED:6,LED:7,LED:8'
 try:
     import serial  # pyright: ignore[reportMissingImports]
 except Exception:
