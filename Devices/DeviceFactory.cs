@@ -55,6 +55,7 @@ public class DeviceFactory
         {
             "BUZZER" => new Buzzer { Pin = pin },
             "LED" => new LED { Pin = pin, Type = type, Connection = _connection },
+            "LCD" => new ScreenLCD(_connection) { },
             _ => null
         };
     }

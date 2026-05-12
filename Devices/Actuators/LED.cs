@@ -1,4 +1,5 @@
 using StadiumSystem.Infrastructure;
+using StadiumSystem.Commands;
 
 namespace StadiumSystem.Devices.Actuators;
 
@@ -12,13 +13,13 @@ public class LED : IActuator
     public void On()
     {
         IsOn = true;
-        SendState(true);
+        SendCommand(true);
     }
 
     public void Off()
     {
         IsOn = false;
-        SendState(false);
+        SendCommand(false);
     }
 
     public async Task BlinkAsync(int times = 1, int delayMs = 500)
@@ -32,13 +33,11 @@ public class LED : IActuator
         }
     }
 
-    private void SendState(bool isOn)
+    private void SendCommand(bool turnOn)
     {
-        if (Connection is null)
-        {
-            return;
-        }
+        if (Connection is null) return;
 
-        Connection.SendRawCommand($"LED_{(isOn ? "ON" : "OFF")}:{Pin}");
+        ICommand cmd = turnOn ? new LedOnCommand(Pin) : new LedOffCommand(Pin);
+        Connection.SendCommand(cmd);
     }
 }

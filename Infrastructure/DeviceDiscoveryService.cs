@@ -1,5 +1,6 @@
 using StadiumSystem.Devices;
 using StadiumSystem.Domain;
+using StadiumSystem.Commands;
 
 namespace StadiumSystem.Infrastructure;
 
@@ -44,7 +45,7 @@ public class DeviceDiscoveryService : IDeviceDiscoveryService
             var maxWait = TimeSpan.FromSeconds(30);
             while (!_inventoryReceived && DateTime.UtcNow - start < maxWait)
             {
-                _arduinoConnection.RequestInventory();
+                _arduinoConnection.SendCommand(new RequestInventoryCommand());
                 await Task.Delay(2000);
                 if (!_inventoryReceived)
                     Console.WriteLine("[Discovery] Esperando inventario... (enviando solicitud)");

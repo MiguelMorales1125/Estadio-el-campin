@@ -1,3 +1,4 @@
+using System.IO.Ports;
 using StadiumSystem.Commands;
 using StadiumSystem.Services;
 
@@ -40,20 +41,13 @@ public class ArduinoConnection : IDisposable
 
     public void SendCommand(ICommand command)
     {
-        SendRawCommand(command.Name);
+        SendRawCommand(command.Serialize());
     }
 
     public void SendRawCommand(string message)
     {
         if (!_port.IsOpen) return;
         try { _port.WriteLine(message); }
-        catch { }
-    }
-
-    public void RequestInventory()
-    {
-        if (!_port.IsOpen) return;
-        try { _port.WriteLine("REQUEST_INVENTORY"); }
         catch { }
     }
 

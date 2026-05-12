@@ -27,7 +27,10 @@ services.AddScoped<LightController>();
 services.AddSingleton<ArduinoRuntimeProcessor>();
 services.AddScoped<StadiumController>();
 services.AddScoped<ConsoleApp>();
-services.AddScoped<ScoreController>();
+services.AddScoped<ScoreController>(sp => new ScoreController(
+    sp.GetRequiredService<IDeviceRegistry>(),
+    sp.GetRequiredService<ArduinoConnection>(),
+    sp.GetRequiredService<ITerminalLogService>()));
 services.AddScoped<SoundController>();
 services.AddSingleton<ITerminalLogService>(new TerminalLogService(LogLevel.Info));
 
